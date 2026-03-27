@@ -1,0 +1,38 @@
+# SQLite Database
+*.sqlite
+*.sqlite3
+*.db
+# DB folder
+database/*.sqlite
+data/
+# Environment
+.env
+.env.local
+.env.*.local
+# Config files that may contain secrets
+config.php
+config/*.php
+# PHPStorm / IDE
+.idea/
+*.iml
+# OS FILES
+.DS_Store
+Thumbs.db
+# LOGS & TEMP FILES
+*.log
+logs/
+tmp/
+temp/
+cache/
+# DEPENDENCIES
+vendor/
+# NODE JS Tooling
+node_modules/
+# TEST / DEBUG
+coverage/
+.phpunit.result.cache
+# MISC
+*.bak
+*.swp
+# User images
+images/uploads/
