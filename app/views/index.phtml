@@ -1,0 +1,8 @@
+<?php
+require_once __DIR__ . "/components/header.phtml";
+require_once __DIR__ . "/../models/UserDataSet.php";
+$user = new App\models\UserDataSet();
+?>
+<main>
+    <h2>No of users <?php echo $user->getAll()?> </h2>
+</main>
