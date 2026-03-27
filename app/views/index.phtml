@@ -1,8 +1,52 @@
 <?php
 require_once __DIR__ . "/components/header.phtml";
 require_once __DIR__ . "/../models/UserDataSet.php";
-$user = new App\models\UserDataSet();
+$userData = new App\models\UserDataSet();
 ?>
-<main>
-    <h2>No of users <?php echo $user->getAll()?> </h2>
+<main class="container mt-2">
+    <section class="row text-center mb-5">
+        <section class="col-md-4 mb-4 card shadow-sm border-0 card-body">
+            <h5 class="card-title text-uppercase text-muted">Total Pets</h5>
+            <h2 class="display-5 fw-bold text-dark"><?php echo $userData->getTotalPets() ?></h2>
+            <p class="text-muted mb-0">Registered in our community</p>
+        </section>
+
+        <section class="col-md-4 mb-4 card shadow-sm border-0 card-body">
+            <h5 class="card-title text-uppercase text-muted">Pets Found</h5>
+            <h2 class="display-5 fw-bold text-dark"><?php echo $userData->getTotalFoundPets() ?></h2>
+            <p class="text-muted mb-0">Reunited with their owners</p>
+        </section>
+
+        <section class="col-md-4 mb-4 card shadow-sm border-0 card-body">
+            <h5 class="card-title text-uppercase text-muted">Registered Users</h5>
+            <h2 class="display-5 fw-bold text-dark"><?php echo $userData->getTotalUsers() ?></h2>
+            <p class="text-muted mb-0">Pet lovers helping the community</p>
+        </section>
+    </section>
+
+    <section>
+        <div class="card shadow-sm border-0 p-2">
+            <h3 class="mb-2">Our Mission</h3>
+            <p>
+                Every year, countless pets go missing and every day, caring people across our community
+                make a difference by helping bring them home. PetWatch connects owners, finders, and
+                local helpers to make reuniting pets faster and easier.
+            </p>
+            <p>
+                With over <strong>
+                    <?php echo $userData->getTotalUsers(); ?></strong> members and
+                <strong>
+                    <?php echo $userData->getTotalPets(); ?></strong> pets registered, we’ve already helped
+                <strong>
+                    <?php echo $userData->getTotalFoundPets(); ?></strong> pets find their way back home.
+                Whether you’re an owner looking for a lost pet or someone who’s found a furry friend,
+                PawFinder gives you the tools to share sightings, update statuses, and spread the word.
+            </p>
+            <p>
+                Getting started is simple — create an account, register your pets, and start exploring recent
+                sightings in your area. Together, we can make sure no pet stays lost for long :)
+            </p>
+        </div>
+    </section>
 </main>
+<?php require_once __DIR__ . "/components/footer.phtml"; ?>
