@@ -1,0 +1,37 @@
+<?php
+require_once __DIR__ . "/components/header.phtml";
+require_once __DIR__ . "/../models/UserDataSet.php";
+$userData = new App\models\UserDataSet();
+?>
+    <main class="container mt-2">
+<?php if (isset($_SESSION['loggedIn']) && $_SESSION['loggedIn'] === true): ?>
+    <section class="alert alert-success" role="alert">
+        <strong>Login Successful, welcome <?php echo htmlspecialchars($_SESSION['username']) ?></strong>
+        <form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post">
+            <button type="submit" value="logoutButton" name="logoutButton" class="btn btn-dark">Logout</button>
+        </form>
+    </section>
+<?php else: ?>
+    <form method="post" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>">
+        <?php if (isset($_SESSION['error']) && $_SESSION['error'] === true): ?>
+            <section class="alert text-center alert-danger" role="alert">
+                <strong>Error: Invalid login</strong>
+            </section>
+            <?php unset($_SESSION['error']); endif ?>
+        <section class="row text-center align-items-center shadow-sm justify-content-center">
+            <section class="card card-body">
+                <h3 class="card-title text-uppercase text-muted">Login</h3>
+                <label for="username" class="form-label">Username</label>
+                <input type="text" placeholder="Username" required id="username" name="username"
+                       class="mb-3 form-control">
+                <label for="password" class="form-label">Password</label>
+                <input type="password" placeholder="Password" id="password" name="password"
+                       class="mb-3 form-control"
+                       minlength="10" required>
+                <button type="submit" class="btn btn-success form-control" value="loginBtn" name="loginBtn">Login
+                </button>
+            </section>
+    </form>
+    </main>
+<?php endif ?>
+<?php require_once __DIR__ . "/components/footer.phtml"; ?>
