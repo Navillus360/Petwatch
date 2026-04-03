@@ -11,6 +11,7 @@ namespace App\models;
 use PDO;
 
 require_once('Database.php');
+require_once('UserData.php');
 
 final class UserDataSet
 {
@@ -29,7 +30,7 @@ final class UserDataSet
         $userExistQuery->bindParam(':username', $username, PDO::PARAM_STR);
         $userExistQuery->execute();
         $row = $userExistQuery->fetch();
-        if ($row && password_verify($password, $row['password'])) {
+        if ($row && password_verify($password, $row['password_hash'])) {
             return new UserData($row);
         } else {
             return false;
@@ -46,6 +47,7 @@ final class UserDataSet
         unset($_SESSION['username']);
         unset($_SESSION['userID']);
         unset($_SESSION['role']);
+        unset($_SESSION['loggedIn']);
     }
 
     /**

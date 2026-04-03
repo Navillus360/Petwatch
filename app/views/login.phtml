@@ -8,7 +8,8 @@ $userData = new App\models\UserDataSet();
     <section class="alert alert-success" role="alert">
         <strong>Login Successful, welcome <?php echo htmlspecialchars($_SESSION['username']) ?></strong>
         <form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post">
-            <button type="submit" value="logoutButton" name="logoutButton" class="btn btn-dark">Logout</button>
+            <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token']; ?>">
+            <button type="submit" value="logoutBtn" name="logoutBtn" class="btn btn-dark">Logout</button>
         </form>
     </section>
 <?php else: ?>
@@ -18,6 +19,7 @@ $userData = new App\models\UserDataSet();
                 <strong>Error: Invalid login</strong>
             </section>
             <?php unset($_SESSION['error']); endif ?>
+        <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token']; ?>">
         <section class="row text-center align-items-center shadow-sm justify-content-center">
             <section class="card card-body">
                 <h3 class="card-title text-uppercase text-muted">Login</h3>

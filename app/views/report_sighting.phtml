@@ -1,0 +1,12 @@
+<?php
+require_once __DIR__ . "/components/header.phtml";
+require_once __DIR__ . "/../models/UserDataSet.php";
+$petData = new App\models\UserDataSet();
+?>
+<?php if (isset($_SESSION['userID'])) { ?>
+    <main class="card-container container mt-4">
+    </main>
+<?php } else { ?>
+    <h3 class="mb-4">Invalid Access: You are not logged in</h3>
+<?php } ?>
+<?php require_once __DIR__ . ('/../views/components/footer.phtml') ?>

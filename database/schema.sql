@@ -20,11 +20,11 @@ create table pets
     name          text    not null,
     species       text    not null,
     breed         text    not null,
-    color                 not null,
+    color         text    not null,
     photo_url     text,
     status        text    not null,
     description   text    not null,
-    date_reported date    not null,
+    date_reported date,
     user_id       int
         constraint pets_users_user_id_fk
             references users,
