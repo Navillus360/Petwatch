@@ -13,7 +13,7 @@ $userData = new App\models\UserDataSet();
         </form>
     </section>
 <?php else: ?>
-    <form method="post" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>">
+    <form method="post" action="/?page=login">
         <?php if (isset($_SESSION['error']) && $_SESSION['error'] === true): ?>
             <section class="alert text-center alert-danger" role="alert">
                 <strong>Error: Invalid login</strong>

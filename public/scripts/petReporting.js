@@ -7,17 +7,21 @@
  * Shows the normal card on load
  */
 window.onload = function () {
-    reportMissing(false);
+    document.querySelectorAll('.card-body').forEach(card => {
+        card.querySelector('.normalCard').style.display = 'block';
+        card.querySelector('.reportMissingCard').style.display = 'none';
+    });
 };
 
-function reportMissing(showReportCard){
-    const normalCard = document.getElementById("normalCard")
-    const reportMissingCard = document.getElementById("reportMissingCard")
-    if(showReportCard){
+function reportMissing(button, showReportCard) {
+    const cardBody = button.closest('.card-body');
+    const normalCard = cardBody.querySelector('.normalCard');
+    const reportMissingCard = cardBody.querySelector('.reportMissingCard');
+    if (showReportCard) {
         normalCard.style.display = 'none';
-        reportMissingCard.style.display = 'block'
-    }else{
+        reportMissingCard.style.display = 'block';
+    } else {
         normalCard.style.display = 'block';
-        reportMissingCard.style.display = 'none'
+        reportMissingCard.style.display = 'none';
     }
 }

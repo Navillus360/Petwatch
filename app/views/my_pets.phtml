@@ -1,128 +1,160 @@
 <?php
-require_once __DIR__ . "/components/header.phtml";
-require_once __DIR__ . "/../models/PetDataSet.php";
-$petDataSet = new App\models\PetDataSet();
+/** @var array $userPets */
+/** @var int|null $editingPetID */
+require __DIR__ . "/components/header.phtml";
 ?>
 <main class="container mt-2">
     <?php if (!isset($_SESSION['userID'])): ?>
         <h3>Invalid Access: You are not logged in</h3>
     <?php else: ?>
-    <script src="scripts/petReporting.js"></script>
-    <section class="row">
-        <div class="col-md-4 mb-4">
-            <div class="card h-100 p-3 shadow-sm">
-                <form method="post" enctype="multipart/form-data">
-                    <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token']; ?>">
-                    <div class="form-group">
-                        <h4>Add New Pet</h4>
-                        <label for="photo_url">Pet Photo:</label>
-                        <input type="file" name="photo_url" id="photo_url" accept=".jpg,.jpeg,.png"
-                               class="form-control" alt="pet img">
-                        <div class="card-text mb-1">
-                            <label for="name"> Pet Name:</label>
-                            <input type="text" name="name" id="name" class="form-control"
-                                   placeholder="Enter pet name here..."
-                                   required>
-                        </div>
-                        <div class="card-text mb-1">
-                            <label for="species"> Pet Species: </label>
-                            <input type="text" name="species" id="species" class="form-control"
-                                   placeholder="Enter pet species here..."
-                                   required>
-                        </div>
-                        <div class="card-text mb-1">
-                            <label for="breed"> Pet Breed:</label>
-                            <input type="text" name="breed" id="breed" class="form-control"
-                                   placeholder="Enter pet breed here..."
-                                   required>
-                        </div>
-                        <div class="card-text mb-1">
-                            <label for="color"> Color of pet:</label>
-                            <input type="text" name="color" id="color" class="form-control"
-                                   placeholder="Enter pet color here..."
-                                   required>
-                        </div>
-                        <div class="card-text">
-                            <label for="description">Description of pet</label>
-                            <textarea name="description" id="description" class="form-control" rows="3" maxlength="200"
-                                      required></textarea>
-                        </div>
-                        <small>
-                            <button type="submit" name="addPetBtn" class="btn btn-primary" value="1"> Add Pet
-                            </button>
-                        </small>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <?php $userPets = $petDataSet->getUserPets();
-        foreach ($userPets as $pet): ?>
+        <script src="/scripts/petReporting.js"></script>
+        <section class="row">
             <div class="col-md-4 mb-4">
-                <div class="card h-100 d-flex flex-row align-items-center p-2 shadow-sm">
-                    <img src="images/<?= htmlspecialchars($pet->getPhotoURL()); ?>"
-                         alt="Pet Image"
-                         style="width:100px;height:100px;object-fit:cover;border-radius:10px;">
-                    <div class="card-body">
-                        <div id="reportMissingCard">
-                            <form method="post">
-                                <input type="hidden" name="petID" value="<?= $pet->getPetID(); ?>">
-                                <div class="card-text mb-2">
-                                    <label for="lat">Latitude</label>
-                                    <input type="text" name="lat" id="lat" class="form-control" required>
-                                </div>
-                                <div class="card-text mb-2">
-                                    <label for="long">Longitude</label>
-                                    <input type="text" name="long" id="long" class="form-control" required>
-                                </div>
-                                <div class="card-text">
-                                    <label for="description">Description of pet and last seen:</label>
-                                    <textarea name="description" id="description" class="form-control" rows="3"
-                                              maxlength="200"
-                                              required></textarea>
-                                </div>
-                                <button name="action" value="lost" class="btn btn-warning w-100 mb-2">Confirm
-                                    Sighting
-                                </button>
-                                <button class="btn btn-secondary w-100" onclick="reportMissing(false)">Cancel</button>
-                            </form>
+                <div class="card h-100 p-3 shadow-sm">
+                    <form method="post" enctype="multipart/form-data">
+                        <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token']; ?>">
+                        <div class="form-group">
+                            <h4>Add New Pet</h4>
+                            <label for="photo_url">Pet Photo:</label>
+                            <input type="file" name="photo_url" id="photo_url" accept=".jpg,.jpeg,.png"
+                                   class="form-control" alt="pet img">
+                            <div class="card-text mb-1">
+                                <label for="name"> Pet Name:</label>
+                                <input type="text" name="name" id="name" class="form-control"
+                                       placeholder="Enter pet name here..."
+                                       required>
+                            </div>
+                            <div class="card-text mb-1">
+                                <label for="species"> Pet Species: </label>
+                                <input type="text" name="species" id="species" class="form-control"
+                                       placeholder="Enter pet species here..."
+                                       required>
+                            </div>
+                            <div class="card-text mb-1">
+                                <label for="breed"> Pet Breed:</label>
+                                <input type="text" name="breed" id="breed" class="form-control"
+                                       placeholder="Enter pet breed here..."
+                                       required>
+                            </div>
+                            <div class="card-text mb-1">
+                                <label for="color"> Color of pet:</label>
+                                <input type="text" name="color" id="color" class="form-control"
+                                       placeholder="Enter pet color here..."
+                                       required>
+                            </div>
+                            <div class="card-text">
+                                <label for="description">Description of pet</label>
+                                <textarea name="description" id="description" class="form-control" rows="3"
+                                          maxlength="200"
+                                          required></textarea>
+                            </div>
+                            <small>
+                                <button type="submit" name="addPetBtn" class="btn btn-primary">Add Pet</button>
+                            </small>
                         </div>
+                    </form>
+                </div>
+            </div>
 
-                        <div id="normalCard">
-                            <h5 class="card-title"><?= htmlspecialchars($pet->getName()); ?></h5>
-                            <h6 class="card-subtitle mb-2 text-muted"><?= htmlspecialchars($pet->getColor() . " " . $pet->getBreed() . " "); ?></h6>
-                            <p class="card-text mb-3"><?= htmlspecialchars($pet->getDescription()); ?></p>
-                            <?php if ($pet->getDateReported() !== null): ?>
-                                <strong class="card-text mb-1">Date Reported
-                                    Missing:<?= htmlspecialchars($pet->getDateReported()) ?></strong>
-                            <?php endif ?>
-                            <?php if ($pet->getStatus() == 'lost'): ?>
-                            <button type="submit" name="action" value="found"
-                                    class="btn btn-success w-100 mb-2 form-control">
-                                Mark as Found
-                            </button>
-                            <form method="post" action="">
-                                <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token']; ?>">
-                                <input type="hidden" name="petID" value="<?= $pet->getPetID(); ?>">
-                                <?php elseif ($pet->getStatus() == 'found'): ?>
-                                    <button class="btn btn-success w-100 mb-2 form-control"
-                                            onclick="reportMissing(true)">
-                                        Mark As Lost
+            <?php
+            foreach ($userPets as $pet): ?>
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100 d-flex flex-row align-items-center p-2 shadow-sm">
+                        <img src="/images/uploads/<?= htmlspecialchars($pet->getPhotoURL()); ?>"
+                             alt="Pet Image"
+                             style="width:100px;height:100px;object-fit:cover;border-radius:10px;">
+                        <div class="card-body">
+                            <div class="reportMissingCard">
+                                <form method="post" action="/?page=my_pets">
+                                    <input type="hidden" name="petID" value="<?= $pet->getPetID(); ?>">
+                                    <div class="card-text mb-2">
+                                        <label for="lat">Latitude</label>
+                                        <input type="text" name="lat" class="form-control" required>
+                                    </div>
+                                    <div class="card-text mb-2">
+                                        <label for="long">Longitude</label>
+                                        <input type="text" name="long" class="form-control" required>
+                                    </div>
+                                    <div class="card-text">
+                                        <label for="description">Description of pet and last seen:</label>
+                                        <textarea name="description" class="form-control" rows="3"
+                                                  maxlength="200"
+                                                  required></textarea>
+                                    </div>
+                                    <button name="action" type="submit" value="lost" class="btn btn-warning w-100 mb-2">
+                                        Confirm
+                                        Sighting
                                     </button>
-                                    <button type="submit" name="action" value="delete"
-                                            class="btn btn-danger form-control"
-                                            onclick="return confirm('Are you sure you wish to remove this pet')">
-                                        Remove Pet
+                                    <button class="btn btn-secondary w-100" onclick="reportMissing(this, false)">Cancel
                                     </button>
-                                <?php endif ?>
-                            </form>
+                                </form>
+                            </div>
+
+                            <div class="normalCard">
+                                <?php if ($editingPetID != $pet->getPetID()): ?>
+                                    <h5 class="card-title"><?= htmlspecialchars($pet->getName()); ?></h5>
+                                    <h6 class="card-subtitle mb-2 text-muted"><?= htmlspecialchars($pet->getColor() . " " . $pet->getBreed() . " "); ?></h6>
+                                    <p class="card-text mb-3"><?= htmlspecialchars($pet->getDescription()); ?></p>
+                                    <?php if ($pet->getDateReported() !== null): ?>
+                                        <strong class="card-text mb-1">Date Reported
+                                            Missing:<?= htmlspecialchars($pet->getDateReported()) ?></strong>
+                                    <?php endif ?>
+                                    <form method="post" action="/?page=my_pets">
+                                        <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token']; ?>">
+                                        <input type="hidden" name="petID" value="<?= $pet->getPetID(); ?>">
+                                        <?php if ($pet->getStatus() == 'lost'): ?>
+                                            <button type="submit" name="action" value="found"
+                                                    class="btn btn-success w-100 mb-2 form-control">
+                                                Mark as Found
+                                            </button>
+                                        <?php elseif ($pet->getStatus() == 'found'): ?>
+                                            <button type="button" class="btn btn-success w-100 mb-2 form-control"
+                                                    onclick="reportMissing(this, true)">
+                                                Mark As Lost
+                                            </button>
+                                            <button type="submit" name="action" value="delete"
+                                                    class="btn btn-danger form-control w-100 mb-2"
+                                                    onclick="return confirm('Are you sure you wish to remove this pet?')">
+                                                Remove Pet
+                                            </button>
+                                        <?php endif; ?>
+                                    </form>
+                                <?php endif; ?>
+                                <?php if ($editingPetID == $pet->getPetID()): ?>
+                                    <form method="post" action="/?page=my_pets">
+                                        <input type="hidden" name="csrf_token"
+                                               value="<?= $_SESSION['csrf_token']; ?>">
+                                        <input type="hidden" name="petID" value="<?= $pet->getPetID(); ?>">
+                                        <input type="text" name="name"
+                                               value="<?= htmlspecialchars($pet->getName()); ?>"
+                                               class="form-control mb-2">
+                                        <input type="text" name="species"
+                                               value="<?= htmlspecialchars($pet->getSpecies()); ?>"
+                                               class="form-control mb-2">
+                                        <input type="text" name="breed"
+                                               value="<?= htmlspecialchars($pet->getBreed()); ?>"
+                                               class="form-control mb-2">
+                                        <input type="text" name="color"
+                                               value="<?= htmlspecialchars($pet->getColor()); ?>"
+                                               class="form-control mb-2">
+                                        <textarea name="description"
+                                                  class="form-control mb-2"><?= htmlspecialchars($pet->getDescription()); ?></textarea>
+                                        <button type="submit" name="action" value="update"
+                                                class="btn btn-success w-100 mb-2"> Save
+                                        </button>
+                                        <a href="/?page=my_pets" class="btn btn-secondary w-100"> Cancel </a>
+                                    </form>
+                                <?php else: ?>
+                                    <a href="/?page=my_pets&editPet=<?= $pet->getPetID(); ?>"
+                                       class="btn btn-primary w-100 mb-2 form-control">Edit</a>
+                                <?php endif; ?>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        <?php endforeach; ?>
-    </section>
+            <?php endforeach; ?>
+        </section>
+    <?php endif; ?>
 </main>
-<?php endif; ?>
 <?php require_once __DIR__ . "/components/footer.phtml"; ?>
 

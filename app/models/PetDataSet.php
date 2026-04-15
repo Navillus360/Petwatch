@@ -10,7 +10,6 @@ namespace App\models;
 
 use PDO;
 use PDOException;
-use PetData;
 
 require_once('Database.php');
 require_once('PetData.php');
@@ -26,6 +25,7 @@ class PetDataSet
         $sqlQuery = "SELECT * FROM pets WHERE status = 'lost';";
         $stmt = $db->prepare($sqlQuery);
         $stmt->execute();
+        $missingPets = array();
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) $missingPets[] = new PetData($row);
         return $missingPets;
     }
@@ -54,45 +54,54 @@ class PetDataSet
     public function changePetStatus($petID, $status)
     {
         $db = Database::connect();
-        $sqlQuery = "UPDATE pets SET status = :status WHERE pet_id = :petID;";
+        $userID = $_SESSION['userID'];
+        $sqlQuery = "UPDATE pets SET status = :status WHERE pet_id = :petID AND user_id = :userID;";
         $stmt = $db->prepare($sqlQuery);
         $stmt->bindParam(':status', $status, PDO::PARAM_STR);
         $stmt->bindParam(':petID', $petID, PDO::PARAM_INT);
+        $stmt->bindParam(':userID', $userID, PDO::PARAM_INT);
         $stmt->execute();
     }
 
     //region Pet Reporting Functions
 
     /**
-     * @param PetData $petData
+     * @param $petID
+     * @param $comment
+     * @param $latitude
+     * @param $longitude
      * @return void
-     * If the pet has not been reported missing for the first time
-     * This function will be called to add a new missing sighting to the database
-     * Whilst also setting the pets status to lost
+     * Sets the owners pet as missing whilst adding a new sighting of said pet to the database
      */
-    public function reportMissingPet(PetData $petData)
+    public function reportMissingPet($petID, $comment, $latitude, $longitude)
     {
-        $petID = $petData->getPetID();
-        $userID = $_SESSION['userID'] ?? null;
-        $comment = $petData->comment ?? '';
-        $latitude = $petData->latitude ?? '';
-        $longitude = $petData->longitude ?? '';
         $db = Database::connect();
-        $addMissingPetQuery = "INSERT INTO sightings(pet_id, user_id, comment, latitude, longitude)
-        VALUES('$petID', '$userID', '$comment', '$latitude', '$longitude');";
-        $stmt = $db->prepare($addMissingPetQuery);
+        $userID = $_SESSION['userID'];
+
+        //Get the pets photo first
+        $getPetPhoto = "SELECT photo_url FROM pets WHERE pet_id = :petID AND user_id = :userID;";
+        $stmt = $db->prepare($getPetPhoto);
         $stmt->bindParam(':petID', $petID, PDO::PARAM_INT);
         $stmt->bindParam(':userID', $userID, PDO::PARAM_INT);
-        $stmt->bindParam(':comment', $comment, PDO::PARAM_STR);
-        $stmt->bindParam(':latitude', $latitude, PDO::PARAM_STR);
-        $stmt->bindParam(':longitude', $longitude, PDO::PARAM_STR);
         $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        $photoURL = $row['photo_url'];
 
-        $this->changePetStatus($petData->getPetID(), 'lost');
+        //Add the missing pet sighting to the database
+        $sqlQuery = "INSERT INTO sightings(pet_id, user_id, comment, latitude, longitude, timestamp, photo_url)
+        VALUES(:pet_id, :user_id, :comment, :latitude, :longitude, NOW(), :photoURL);";
+        $stmt = $db->prepare($sqlQuery);
+        $stmt->bindParam(':pet_id', $petID, PDO::PARAM_INT);
+        $stmt->bindParam(':user_id', $userID, PDO::PARAM_INT);
+        $stmt->bindParam(':comment', $comment, PDO::PARAM_STR);
+        $stmt->bindParam(':latitude', $latitude, PDO::PARAM_INT);
+        $stmt->bindParam(':longitude', $longitude, PDO::PARAM_INT);
+        $stmt->bindParam(':photoURL', $photoURL, PDO::PARAM_STR);
+        $stmt->execute();
     }
     //endregion
 
-    //region Add/Delete Pet Functions
+    //region Add/Delete/Update Pet Functions
     /**
      * @param string $name
      * @param string $species
@@ -109,7 +118,7 @@ class PetDataSet
         $db = Database::connect();
         $userID = $_SESSION['userID'] ?? null;
         $sqlQuery = "INSERT INTO pets(name, species, breed, color, photo_url, status, user_id, description) 
-            VALUES ($name, $species, $breed, $color, $photo_url, 'found', $userID, $description);)";
+            VALUES ('$name', '$species', '$breed', '$color', '$photo_url', 'found', $userID, '$description');)";
         $stmt = $db->prepare($sqlQuery);
         $stmt->execute();
         return true;
@@ -127,33 +136,59 @@ class PetDataSet
         try {
             $db->beginTransaction();
 
-            //Check if the pet exists
-            $checkPetExists = "SELECT pet_id FROM pets WHERE pet_id = :petID AND user_id = :userID;";
-            $stmt = $db->prepare($checkPetExists);
-            $userID = $_SESSION['userID'] ?? null;
+            //Check if user is logged in first
+            if (!isset($_SESSION['userID'])) return false;
+            $userID = (int)$_SESSION['userID'];
+
+            //Get the pets photo and assign it to a variable so we can delete it from the server
+            $sqlQuery = "SELECT photo_url FROM pets WHERE pet_id = :petID AND user_id = :userID;";
+            $stmt = $db->prepare($sqlQuery);
             $stmt->bindParam(':petID', $petID, PDO::PARAM_INT);
             $stmt->bindParam(':userID', $userID, PDO::PARAM_INT);
             $stmt->execute();
-            if ($stmt->rowCount() == 0) {
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($row['photo_url'] !== null) $filePath = __DIR__ . '/../../public/images/uploads/' . $row['photo_url'];
+            else {
                 $db->rollBack();
                 return false;
             }
 
-            //Deletes all the sightings relating to the pet
-            $deleteSightingQuery = $db->prepare("DELETE FROM sightings WHERE pet_id = :petID;");
-            $deleteSightingQuery->bindParam(':petID', $petID, PDO::PARAM_INT);
-            $deleteSightingQuery->execute();
-
-            //Deletes the pet from the Database
-            $deletePetQuery = $db->prepare("DELETE FROM pets WHERE pet_id = :petID;");
-            $deletePetQuery->bindParam(':petID', $petID, PDO::PARAM_INT);
-            $deletePetQuery->execute();
-            $db->commit();
-            return true;
+            //Deletes the pet from the database (and its sightings since it's a FK in the sightings table)
+            $sqlQuery = "DELETE FROM pets WHERE pet_id = :petID AND user_id = :userID;";
+            $sqlQuery = $db->prepare($sqlQuery);
+            $sqlQuery->bindParam(':petID', $petID, PDO::PARAM_INT);
+            $sqlQuery->bindParam(':userID', $userID, PDO::PARAM_INT);
+            $sqlQuery->execute();
+            if ($sqlQuery->rowCount() === 0) {
+                $db->rollBack();
+                return false;
+            } else {
+                //Delete the photo from the server
+                unlink($filePath);
+                $db->commit();
+                return true;
+            }
         } catch (PDOException $e) {
             $db->rollBack();
             return false;
         }
+    }
+
+    public function UpdatePetDetails($petID, $name, $species, $breed, $color, $description)
+    {
+        $db = Database::connect();
+        $userID = $_SESSION['userID'] ?? null;
+        $sqlQuery = "UPDATE pets SET name = :name, species = :species, breed = :breed, color = :color, description = :description 
+            WHERE pet_id = :petID;";
+        $stmt = $db->prepare($sqlQuery);
+        $stmt->bindParam(':petID', $petID, PDO::PARAM_INT);
+        $stmt->bindParam(':name', $name, PDO::PARAM_STR);
+        $stmt->bindParam(':species', $species, PDO::PARAM_STR);
+        $stmt->bindParam(':breed', $breed, PDO::PARAM_STR);
+        $stmt->bindParam(':color', $color, PDO::PARAM_STR);
+        $stmt->bindParam(':description', $description, PDO::PARAM_STR);
+        $stmt->bindParam(':petID', $petID, PDO::PARAM_INT);
+        $stmt->execute();
     }
     //endregion
 }

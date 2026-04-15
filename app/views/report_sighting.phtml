@@ -1,10 +1,62 @@
 <?php
 require_once __DIR__ . "/components/header.phtml";
-require_once __DIR__ . "/../models/UserDataSet.php";
-$petData = new App\models\UserDataSet();
+require_once __DIR__ . "/../models/PetDataSet.php";
+$sightingData = new App\models\PetDataSet();
 ?>
 <?php if (isset($_SESSION['userID'])) { ?>
     <main class="card-container container mt-4">
+        <div class="text-center ">
+            <div class="card h-100 p-3 shadow-sm">
+                <form method="post" enctype="multipart/form-data">
+                    <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token']; ?>">
+                    <div class="form-group">
+                        <h4>Report Sighting</h4>
+                        <div class="card-text mb-3 text-center">
+                            <select id="missingPets" onmousedown="if(this.options.length>5){this.size=5;}"
+                                    onchange="this.size=1;" onmouseleave="this.size=1;">
+                                <option value="" class="text-center" disabled selected>--Choose A Pet--</option>
+                                <?php $missingPets = $sightingData->getMissingPets();
+                                foreach ($missingPets as $missingPet): ?>
+                                    <option value="<?php echo $missingPet->getPetID() ?>" class="text-center">
+                                        <?php echo $missingPet->getInfo() ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+
+                        <div class="card-text mb-3">
+                            <label for="photo_url">Pet Photo:</label>
+                            <input type="file" name="photo_url" id="photo_url" accept=".jpg,.jpeg,.png"
+                                   class="form-control" alt="pet img">
+                        </div>
+
+                        <div class="card-text mb-3">
+                            <label for="latitude" class="col-sm-1 col-form-label form-control">Latitude *</label>
+                            <input type="number" id="latitude" name="latitude" class="form-control " placeholder="0.0"
+                                   min="-180"
+                                   max="180" required>
+                        </div>
+
+                        <div class="card-text mb-3">
+                            <label for="longitude" class="col-sm-1 col-form-label form-control">Longitude *</label>
+                            <input type="number" id="longitude" name="longitude" class="form-control " placeholder="0.0"
+                                   min="-180"
+                                   max="180" required>
+                        </div>
+
+                        <div class="card-text mb-3">
+                            <label for="comment">Comment</label>
+                            <textarea class="form-control mb-3" id="comment" name="comment" rows="3"
+                                      required></textarea>
+                        </div>
+
+                        <small>
+                            <button type="submit" name="submitSightingBtn" class="btn btn-primary">Add Pet</button>
+                        </small>
+                    </div>
+                </form>
+            </div>
+        </div>
     </main>
 <?php } else { ?>
     <h3 class="mb-4">Invalid Access: You are not logged in</h3>

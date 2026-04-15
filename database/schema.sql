@@ -21,13 +21,14 @@ create table pets
     species       text    not null,
     breed         text    not null,
     color         text    not null,
-    photo_url     text,
+    photo_url     text    not null,
     status        text    not null,
     description   text    not null,
     date_reported date,
     user_id       int
         constraint pets_users_user_id_fk
-            references users,
+            references users
+            on delete cascade,
     constraint check_name
         check (`status` in ('lost', 'found'))
 );
@@ -45,14 +46,17 @@ create table sightings
             primary key autoincrement,
     pet_id      int                                not null
         constraint sightings_pets_pet_id_fk
-            references pets,
+            references pets
+            on delete cascade,
     user_id     int                                not null
         constraint sightings_users_user_id_fk
-            references users,
+            references users
+            on delete cascade,
     comment     text                               not null,
     latitude    double                             not null,
     longitude   double                             not null,
-    timestamp   datetime default current_timestamp not null
+    timestamp   datetime default current_timestamp not null,
+    photo_url   text                               not null
 );
 
 create unique index sightings_sighting_id_uindex

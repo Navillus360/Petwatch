@@ -5,6 +5,9 @@
  * This class models a pets data, utilizing private fields for data encapsulation.
  * It takes a database row as input in the constructor and assigns the retrieved values to private fields.
  */
+
+namespace App\models;
+
 class PetData
 {
     private $_petID, $_name, $_species, $_breed, $_color, $_photo_url, $_status;
@@ -18,10 +21,8 @@ class PetData
         $this->_breed = $dbRow['breed'];
         $this->_color = $dbRow['color'];
         $this->_photo_url = $dbRow['photo_url'];
-        if ($dbRow['status'] == 'lost'):
-            $this->_date_reported = $dbRow['date_reported'];
-        else:
-            $this->_date_reported = null;
+        if ($dbRow['status'] == 'lost'): $this->_date_reported = $dbRow['date_reported'];
+        else: $this->_date_reported = null;
         endif;
         $this->_status = $dbRow['status'];
         $this->_description = $dbRow['description'];
@@ -70,5 +71,12 @@ class PetData
     public function getDescription()
     {
         return $this->_description;
+    }
+
+    public function getInfo(): string
+    {
+        return $this->getName() . ' ' . $this->getColor() . ' ' .
+            $this->getBreed() . ' ' . $this->getSpecies(). ' ' .
+            $this->getDescription();
     }
 }

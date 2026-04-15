@@ -2,9 +2,8 @@
 
 use App\models\UserDataSet;
 
-require_once __DIR__ . "/../app/models/UserDataSet.php";
+require_once __DIR__ . "/../models/UserDataSet.php";
 
-session_start();
 $userDataSet = new UserDataSet();
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (isset($_POST["registerBtn"])) {
@@ -25,4 +24,3 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
     if (isset($_POST["logoutBtn"])) $userDataSet->Logout();
 }
-require_once __DIR__ . "/../app/views/register.phtml";

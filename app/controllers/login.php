@@ -1,15 +1,11 @@
 <?php
 
+namespace App\controllers;
+
 use App\models\UserDataSet;
 
-require_once __DIR__ . "/../app/models/UserDataSet.php";
+require_once __DIR__ . "/../models/UserDataSet.php";
 $userDataSet = new UserDataSet();
-session_set_cookie_params([
-    'httponly' => true,
-    'secure' => true,
-    'samesite' => 'Strict',
-]);
-session_start();
 if (empty($_SESSION['csrf_token'])) $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -32,4 +28,3 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
     if (isset($_POST["logoutBtn"])) $userDataSet->Logout();
 }
-require_once __DIR__ . "/../app/views/login.phtml";
