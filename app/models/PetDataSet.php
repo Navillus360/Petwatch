@@ -45,6 +45,16 @@ class PetDataSet
         return $userPets;
     }
 
+    public function getPetStatusById(int $petID): array
+    {
+        $db = Database::connect();
+        $sqlQuery = "SELECT status FROM pets WHERE pet_id = $petID;";
+        $stmt = $db->prepare($sqlQuery);
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row['status'];
+    }
+
     /**
      * @param $petID
      * @param $status
@@ -88,8 +98,8 @@ class PetDataSet
         $photoURL = $row['photo_url'];
 
         //Add the missing pet sighting to the database
-        $sqlQuery = "INSERT INTO sightings(pet_id, user_id, comment, latitude, longitude, timestamp, photo_url)
-        VALUES(:pet_id, :user_id, :comment, :latitude, :longitude, NOW(), :photoURL);";
+        $sqlQuery = "INSERT INTO sightings(pet_id, user_id, comment, latitude, longitude, photo_url)
+        VALUES(:pet_id, :user_id, :comment, :latitude, :longitude, :photoURL);";
         $stmt = $db->prepare($sqlQuery);
         $stmt->bindParam(':pet_id', $petID, PDO::PARAM_INT);
         $stmt->bindParam(':user_id', $userID, PDO::PARAM_INT);
@@ -133,41 +143,51 @@ class PetDataSet
     public function DeletePet(int $petID): bool
     {
         $db = Database::connect();
+
         try {
             $db->beginTransaction();
 
-            //Check if user is logged in first
             if (!isset($_SESSION['userID'])) return false;
             $userID = (int)$_SESSION['userID'];
 
-            //Get the pets photo and assign it to a variable so we can delete it from the server
-            $sqlQuery = "SELECT photo_url FROM pets WHERE pet_id = :petID AND user_id = :userID;";
-            $stmt = $db->prepare($sqlQuery);
-            $stmt->bindParam(':petID', $petID, PDO::PARAM_INT);
-            $stmt->bindParam(':userID', $userID, PDO::PARAM_INT);
-            $stmt->execute();
+            //
+            $sql = "SELECT photo_url FROM pets WHERE pet_id = :petID AND user_id = :userID;";
+            $stmt = $db->prepare($sql);
+            $stmt->execute([
+                ':petID' => $petID,
+                ':userID' => $userID
+            ]);
+
             $row = $stmt->fetch(PDO::FETCH_ASSOC);
-            if ($row['photo_url'] !== null) $filePath = __DIR__ . '/../../public/images/uploads/' . $row['photo_url'];
-            else {
+            if (!$row) {
                 $db->rollBack();
                 return false;
             }
 
-            //Deletes the pet from the database (and its sightings since it's a FK in the sightings table)
-            $sqlQuery = "DELETE FROM pets WHERE pet_id = :petID AND user_id = :userID;";
-            $sqlQuery = $db->prepare($sqlQuery);
-            $sqlQuery->bindParam(':petID', $petID, PDO::PARAM_INT);
-            $sqlQuery->bindParam(':userID', $userID, PDO::PARAM_INT);
-            $sqlQuery->execute();
-            if ($sqlQuery->rowCount() === 0) {
+
+            $sql = "DELETE FROM pets WHERE pet_id = :petID AND user_id = :userID;";
+            $stmt = $db->prepare($sql);
+            $stmt->execute([
+                ':petID' => $petID,
+                ':userID' => $userID
+            ]);
+
+            if ($stmt->rowCount() === 0) {
                 $db->rollBack();
                 return false;
-            } else {
-                //Delete the photo from the server
-                unlink($filePath);
-                $db->commit();
-                return true;
             }
+
+
+            if (!empty($row['photo_url'])) {
+                $filePath = __DIR__ . '/../../public/images/uploads/' . $row['photo_url'];
+
+                if (file_exists($filePath)) {
+                    unlink($filePath);
+                }
+            }
+            $db->commit();
+            return true;
+
         } catch (PDOException $e) {
             $db->rollBack();
             return false;

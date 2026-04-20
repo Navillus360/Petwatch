@@ -2,10 +2,9 @@
 
 namespace App\models;
 
-use PDOException;
 use PDO;
-use PetData;
-use SightingData;
+use App\models\PetData;
+use App\models\SightingData;
 
 require_once('Database.php');
 require_once('SightingData.php');
@@ -65,7 +64,7 @@ class SightingDataSet
 
     //endregion
 
-    //region Add/Delete sighting functions
+    //region Add/Update/Delete sighting functions
     /**
      * @param $photo_url
      * @param $petID
@@ -79,7 +78,7 @@ class SightingDataSet
     public static function addSighting($photo_url, $petID, $comment, $latitude, $longitude)
     {
         $db = Database::connect();
-        $userID = $_SESSION['userID'];
+        $userID = $_SESSION['userID'] ?? null;
         $sqlQuery = "INSERT INTO sightings(photo_url, pet_id, user_id, comment, latitude, longitude, timestamp) 
         VALUES(:photo_url, :pet_id, :user_id, :comment, :latitude, :longitude, NOW());";
         $stmt = $db->prepare($sqlQuery);
@@ -92,6 +91,21 @@ class SightingDataSet
         $stmt->execute();
     }
 
+    public static function updateSighting($photo_url, $sighting_id, $comment, $latitude, $longitude){
+        $db = Database::connect();
+        $userID = $_SESSION['userID'] ?? null;
+        $sqlQuery = "UPDATE sightings SET comment = :comment, latitude = :latitude, longitude = :longitude, photo_url = :photo_url
+            WHERE sighting_id = :sighting_id AND user_id = :user_id;";
+        $stmt = $db->prepare($sqlQuery);
+        $stmt->bindParam(':comment', $comment, PDO::PARAM_STR);
+        $stmt->bindParam(':latitude', $latitude, PDO::PARAM_STR);
+        $stmt->bindParam(':longitude', $longitude, PDO::PARAM_STR);
+        $stmt->bindParam(':photo_url', $photo_url, PDO::PARAM_STR);
+        $stmt->bindParam(':sighting_id', $sighting_id, PDO::PARAM_INT);
+        $stmt->bindParam(':user_id', $userID, PDO::PARAM_INT);
+        $stmt->execute();
+    }
+
     /**
      * @return void
      * Deletes the selected sighting from the database
@@ -101,7 +115,7 @@ class SightingDataSet
     {
         $db = Database::connect();
         $sightingID = isset($_POST['sightingID']) ? (int)$_POST['sightingID'] : 0;
-        $userID = $_SESSION['userID'];
+        $userID = $_SESSION['userID'] ?? null;
         $role = $_SESSION['role'];
         if ($role == 'admin') {
             $sqlQuery = "DELETE FROM sightings WHERE sighting_id = :sightingID;";

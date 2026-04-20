@@ -10,7 +10,6 @@ require_once __DIR__ . ('/../models/PetDataSet.php');
 require_once __DIR__ . ('/../models/SightingDataSet.php');
 
 $petDataSet = new PetDataSet();
-$sightingDataSet = new SightingDataSet();
 $editingPetID = $_GET['editPet'] ?? null;
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['addPetBtn'])) {
     $name = cleanInput($_POST['name']);
@@ -19,23 +18,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['addPetBtn'])) {
     $color = cleanInput($_POST['color']);
     $description = cleanInput($_POST['description'], 1000);
     $uploadDirectory = __DIR__ . '/../../public/images/uploads/';
-    $photoFileName = 'placeholder.jpg';
-    if (!is_dir($uploadDirectory)) mkdir($uploadDirectory, 0755, true);
-
+    $photoFileName = null;
     if ($_FILES['photo_url']['error'] === UPLOAD_ERR_OK) {
         $photoTmp = $_FILES['photo_url']['tmp_name'];
-        $photoName = $_FILES['photo_url']['name'];
-        $allowedExtensions = ['jpg', 'jpeg', 'png'];
-        $allowedMimeTypes = ['image/jpeg', 'image/png'];
-        $extension = strtolower(pathinfo($photoName, PATHINFO_EXTENSION));
-        $finfo = new finfo(FILEINFO_MIME_TYPE);
-        $mimeType = $finfo->file($photoTmp);
-        if (in_array($extension, $allowedExtensions) && in_array($mimeType, $allowedMimeTypes)) {
-            $safePetName = preg_replace('/[^a-zA-Z0-9_-]/', '', strtolower($name));
-            $safePetName = $safePetName ?: 'pet';
-            $photoFileName = $safePetName . '_' . time() . '.' . $extension;
-            $targetFile = $uploadDirectory . $photoFileName;
-            move_uploaded_file($photoTmp, $targetFile);
+        if (!is_uploaded_file($photoTmp)) $photoFileName = null;
+        else {
+            $photoName = $_FILES['photo_url']['name'];
+            $allowedExtensions = ['jpg', 'jpeg', 'png'];
+            $allowedMimeTypes = ['image/jpeg', 'image/png'];
+            $extension = strtolower(pathinfo($photoName, PATHINFO_EXTENSION));
+            $finfo = new finfo(FILEINFO_MIME_TYPE);
+            $mimeType = $finfo->file($photoTmp);
+            if (in_array($extension, $allowedExtensions) && in_array($mimeType, $allowedMimeTypes)) {
+                $safePetName = preg_replace('/[^a-zA-Z0-9_-]/', '', strtolower($name));
+                $safePetName = $safePetName ?: 'pet';
+                $photoFileName = $safePetName . '_' . time() . '.' . $extension;
+                $targetFile = $uploadDirectory . $photoFileName;
+                if (!move_uploaded_file($photoTmp, $targetFile)) $photoFileName = null;
+            }
         }
     }
     $petDataSet->addPet($name, $species, $breed, $color, $photoFileName, $description);
@@ -56,13 +56,23 @@ if (isset($_POST['action'], $_POST['petID'])) {
             $petDataSet->DeletePet((int)$_POST['petID']);
             break;
         case 'update':
-            $name = cleanInput($_POST['name']);
-            $species = cleanInput($_POST['species']);
-            $breed = cleanInput($_POST['breed']);
-            $color = cleanInput($_POST['color']);
-            $description = cleanInput($_POST['description'], 200);
-            $petDataSet->UpdatePetDetails((int)$_POST['petID'], $name, $species, $breed, $color, $description );
+            checkPetStatus($_POST['petID'], $petDataSet);
             break;
+    }
+}
+
+function checkPetStatus($petID, $petDataSet)
+{
+    $pet = $petDataSet->getPetStatusById($petID);
+    if ($pet->getStatus() === 'lost') {
+        die("You cannot edit a pet while it is marked as lost.");
+    } else {
+        $name = cleanInput($_POST['name']);
+        $species = cleanInput($_POST['species']);
+        $breed = cleanInput($_POST['breed']);
+        $color = cleanInput($_POST['color']);
+        $description = cleanInput($_POST['description'], 200);
+        $petDataSet->UpdatePetDetails((int)$_POST['petID'], $name, $species, $breed, $color, $description);
     }
 }
 

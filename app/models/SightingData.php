@@ -1,4 +1,5 @@
 <?php
+
 namespace App\models;
 
 class SightingData
@@ -68,5 +69,10 @@ class SightingData
     public function getPhotoUrl()
     {
         return $this->_photo_url;
+    }
+
+    public function getInfo(): string
+    {
+        return $this->getPetName() . ': ' . $this->getComment() . ' at: ' . $this->getTimestamp();
     }
 }

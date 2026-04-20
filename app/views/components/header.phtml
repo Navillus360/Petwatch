@@ -35,12 +35,17 @@
                     </li>
                     <?php if (isset($_SESSION['loggedIn']) && $_SESSION['loggedIn'] === true): ?>
                         <li class="nav-item">
-                            <a class="nav-link" href="/?page=report_sighting" title="Report a sighting of a missing pet">Report
+                            <a class="nav-link" href="/?page=report_sighting"
+                               title="Report a sighting of a missing pet">Report
                                 Sighting</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="/?page=my_pets" title="Report a sighting of a missing pet">My
-                                Pets</a>
+                            <a class="nav-link" href="/?page=update_sightings"
+                               title="Missed something in your sighting? Update it here!">Update
+                                Sighting</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/?page=my_pets" title="">My Pets</a>
                         </li>
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"

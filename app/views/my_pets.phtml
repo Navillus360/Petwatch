@@ -10,14 +10,17 @@ require __DIR__ . "/components/header.phtml";
         <script src="/scripts/petReporting.js"></script>
         <section class="row">
             <div class="col-md-4 mb-4">
-                <div class="card h-100 p-3 shadow-sm">
+                <div class="card p-3 shadow-sm">
                     <form method="post" enctype="multipart/form-data">
                         <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token']; ?>">
                         <div class="form-group">
                             <h4>Add New Pet</h4>
                             <label for="photo_url">Pet Photo:</label>
-                            <input type="file" name="photo_url" id="photo_url" accept=".jpg,.jpeg,.png"
-                                   class="form-control" alt="pet img">
+                            <div class="mb-1">
+                                <img id="previewImage" src="" class="mb-3" style="width:200px;height:200px;">
+                                <input type="file" name="photo_url" id="imageInput" accept=".jpg,.jpeg,.png"
+                                       class="form-control" alt="pet img">
+                            </div>
                             <div class="card-text mb-1">
                                 <label for="name"> Pet Name:</label>
                                 <input type="text" name="name" id="name" class="form-control"
@@ -59,12 +62,13 @@ require __DIR__ . "/components/header.phtml";
             <?php
             foreach ($userPets as $pet): ?>
                 <div class="col-md-4 mb-4">
-                    <div class="card h-100 d-flex flex-row align-items-center p-2 shadow-sm">
-                        <img src="/images/uploads/<?= htmlspecialchars($pet->getPhotoURL()); ?>"
-                             alt="Pet Image"
-                             style="width:100px;height:100px;object-fit:cover;border-radius:10px;">
+                    <div class="card d-flex flex-row   shadow-sm">
                         <div class="card-body">
-                            <div class="reportMissingCard">
+                            <img src="/images/uploads/<?= htmlspecialchars($pet->getPhotoURL() ?: 'placeholder.png') ?>"
+                                 alt="Pet Image"
+                                 class="form-control mb-2"
+                                 style="width:200px;height:200px;object-fit:cover;border-radius:10px;">
+                            <div class="reportMissingCard" style="display: none">
                                 <form method="post" action="/?page=my_pets">
                                     <input type="hidden" name="petID" value="<?= $pet->getPetID(); ?>">
                                     <div class="card-text mb-2">
@@ -90,10 +94,41 @@ require __DIR__ . "/components/header.phtml";
                                 </form>
                             </div>
 
+                            <div class="editCard" style="display: none;">
+                                <form method="post" action="/?page=my_pets">
+                                    <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token']; ?>">
+                                    <input type="hidden" name="petID" value="<?= $pet->getPetID(); ?>">
+                                    <input type="text" name="name"
+                                           value="<?= htmlspecialchars($pet->getName()); ?>"
+                                           class="form-control mb-2">
+                                    <input type="text" name="species"
+                                           value="<?= htmlspecialchars($pet->getSpecies()); ?>"
+                                           class="form-control mb-2">
+                                    <input type="text" name="breed"
+                                           value="<?= htmlspecialchars($pet->getBreed()); ?>"
+                                           class="form-control mb-2">
+                                    <input type="text" name="color"
+                                           value="<?= htmlspecialchars($pet->getColor()); ?>"
+                                           class="form-control mb-2">
+                                    <textarea name="description"
+                                              class="form-control mb-2"><?= htmlspecialchars($pet->getDescription()); ?></textarea>
+                                    <button type="submit" name="action" value="update"
+                                            class="btn btn-success w-100 mb-2">
+                                        Save
+                                    </button>
+
+                                    <button type="button" class="btn btn-secondary w-100"
+                                            onclick="toggleEdit(this, false)">
+                                        Cancel
+                                    </button>
+                                </form>
+                            </div>
+
                             <div class="normalCard">
                                 <?php if ($editingPetID != $pet->getPetID()): ?>
                                     <h5 class="card-title"><?= htmlspecialchars($pet->getName()); ?></h5>
-                                    <h6 class="card-subtitle mb-2 text-muted"><?= htmlspecialchars($pet->getColor() . " " . $pet->getBreed() . " "); ?></h6>
+                                    <h6 class="card-subtitle mb-2 text-muted"><?= htmlspecialchars($pet->getColor()
+                                                . " " . $pet->getBreed() . " " . $pet->getSpecies()); ?></h6>
                                     <p class="card-text mb-3"><?= htmlspecialchars($pet->getDescription()); ?></p>
                                     <?php if ($pet->getDateReported() !== null): ?>
                                         <strong class="card-text mb-1">Date Reported
@@ -111,6 +146,11 @@ require __DIR__ . "/components/header.phtml";
                                             <button type="button" class="btn btn-success w-100 mb-2 form-control"
                                                     onclick="reportMissing(this, true)">
                                                 Mark As Lost
+                                            </button>
+                                            <button type="button"
+                                                    class="btn btn-primary w-100 mb-2 form-control"
+                                                    onclick="toggleEdit(this, true)">
+                                                Edit pet details
                                             </button>
                                             <button type="submit" name="action" value="delete"
                                                     class="btn btn-danger form-control w-100 mb-2"
@@ -144,9 +184,6 @@ require __DIR__ . "/components/header.phtml";
                                         </button>
                                         <a href="/?page=my_pets" class="btn btn-secondary w-100"> Cancel </a>
                                     </form>
-                                <?php else: ?>
-                                    <a href="/?page=my_pets&editPet=<?= $pet->getPetID(); ?>"
-                                       class="btn btn-primary w-100 mb-2 form-control">Edit</a>
                                 <?php endif; ?>
                             </div>
                         </div>

@@ -33,6 +33,10 @@ switch ($page) {
         require_once __DIR__ . '/../app/controllers/report_sighting.php';
         $view = 'report_sighting.phtml';
         break;
+    case 'update_sightings':
+        require_once __DIR__ . '/../app/controllers/update_sightings.php';
+        $view = 'update_sightings.phtml';
+        break;
     default:
         $view = 'index.phtml';
 }
