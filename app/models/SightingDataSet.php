@@ -47,21 +47,83 @@ class SightingDataSet
     }
 
     /**
+     * @param string $term
+     * @param string $status
+     * @param string $sort
+     * @param int $limit
+     * @param int $offset
      * @return array
-     * Gets sightings depending on what the user has searched
-     * Used in view_sightings page
+     * Gets sightings from the database
+     * Depending on what the user is searching for
+     * If the search is empty, show all 200 sightings (performance)
+     * Used in the get_sightings api for the live search
      */
-    public static function getSightings(): array
+
+    public function getSightings(string $term = '', string $status = '', string $sort = '', int $limit = 0, int $offset = 0): array
     {
         $db = Database::connect();
-        $sqlQuery = "SELECT s.*, p.name AS pet_name FROM sightings s, pets p WHERE status = 'lost';";
+        $sqlQuery = "SELECT s.*, p.name AS pet_name, p.photo_url AS photo_url, p.status AS pet_status, u.username AS username
+        FROM sightings s JOIN pets p ON s.pet_id = p.pet_id JOIN users u ON s.user_id = u.user_id WHERE 1=1";
+        $params = [];
+        if (!empty($term)) {
+            $sqlQuery .= " AND (
+            s.latitude LIKE :term OR
+            s.longitude LIKE :term OR
+            s.comment LIKE :term OR
+            p.name LIKE :term OR
+            u.username LIKE :term
+        )";
+            $params[':term'] = "%$term%";
+        }
+
+        if ($status === 'lost') {
+            $sqlQuery .= " AND p.status = 'lost'";
+        } elseif ($status === 'found') {
+            $sqlQuery .= " AND p.status = 'found'";
+        }
+
+        if ($sort === 'az') $sqlQuery .= " ORDER BY p.name ASC";
+        elseif ($sort === 'za') $sqlQuery .= " ORDER BY p.name DESC";
+        else $sqlQuery .= " ORDER BY s.pet_id DESC";
+        if ($limit > 0) $sqlQuery .= " LIMIT :limit OFFSET :offset;";
         $stmt = $db->prepare($sqlQuery);
+        foreach ($params as $key => $value) $stmt->bindValue($key, $value, PDO::PARAM_STR);
+        if ($limit != 0) $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
         $stmt->execute();
-        $sightings = array();
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) $sightings[] = new SightingData($row);
-        return $sightings;
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    /**
+     * @param string $term
+     * @param string $status
+     * @return int
+     * Gets the total amount of sightings on the database
+     * Used in the get_sightings api for the live search
+     */
+    public function getTotalSightings(string $term = '', string $status = ''): int
+    {
+        $db = Database::connect();
+        $sqlQuery = "SELECT COUNT(*) FROM sightings s JOIN pets p ON s.pet_id = p.pet_id JOIN users u ON s.user_id = u.user_id WHERE 1=1";
+        $params = [];
+        if (!empty($term)) {
+            $sqlQuery .= " AND (
+            s.latitude LIKE :term OR
+            s.longitude LIKE :term OR
+            s.comment LIKE :term OR
+            p.name LIKE :term OR
+            u.username LIKE :term
+        )";
+            $params[':term'] = "%$term%";
+        }
+
+        if ($status === 'lost') $sqlQuery .= " AND p.status = 'lost';";
+        elseif ($status === 'found') $sqlQuery .= " AND p.status = 'found';";
+        $stmt = $db->prepare($sqlQuery);
+        foreach ($params as $k => $v) $stmt->bindValue($k, $v, PDO::PARAM_STR);
+        $stmt->execute();
+        return (int)$stmt->fetchColumn();
+    }
     //endregion
 
     //region Add/Update/Delete sighting functions
@@ -91,7 +153,8 @@ class SightingDataSet
         $stmt->execute();
     }
 
-    public static function updateSighting($photo_url, $sighting_id, $comment, $latitude, $longitude){
+    public static function updateSighting($photo_url, $sighting_id, $comment, $latitude, $longitude)
+    {
         $db = Database::connect();
         $userID = $_SESSION['userID'] ?? null;
         $sqlQuery = "UPDATE sightings SET comment = :comment, latitude = :latitude, longitude = :longitude, photo_url = :photo_url
@@ -107,22 +170,21 @@ class SightingDataSet
     }
 
     /**
-     * @return void
+     * @return bool
      * Deletes the selected sighting from the database
      * Used in view sightings page, but will only be accessible to admins
      */
-    public static function deleteSighting()
+    public static function deleteSighting(int $sightingID): bool
     {
         $db = Database::connect();
-        $sightingID = isset($_POST['sightingID']) ? (int)$_POST['sightingID'] : 0;
-        $userID = $_SESSION['userID'] ?? null;
         $role = $_SESSION['role'];
         if ($role == 'admin') {
             $sqlQuery = "DELETE FROM sightings WHERE sighting_id = :sightingID;";
             $stmt = $db->prepare($sqlQuery);
             $stmt->bindParam(':sightingID', $sightingID, PDO::PARAM_INT);
-            $stmt->execute();
+           return $stmt->execute();
         }
+        return false;
     }
     //endregion
 }

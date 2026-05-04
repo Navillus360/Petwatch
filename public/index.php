@@ -26,7 +26,6 @@ switch ($page) {
         $view = 'register.phtml';
         break;
     case 'view_sightings':
-        require_once __DIR__ . '/../app/controllers/view_sightings.php';
         $view = 'view_sightings.phtml';
         break;
     case 'report_sighting':

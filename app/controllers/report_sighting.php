@@ -8,6 +8,7 @@ use finfo;
 require_once __DIR__ . ('/../models/SightingDataSet.php');
 $sightingDataSet = new SightingDataSet();
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['addSightingBtn'])) {
+    csrf_validate();
     $missingPetID = (int)$_POST['missingPetID'];
     $latitude = cleanInput($_POST['latitude']);
     $longitude = cleanInput($_POST['longitude']);
@@ -39,4 +40,16 @@ function cleanInput(string $value, int $maxLength = 255): string
     $value = trim($value);
     $value = strip_tags($value);
     return substr($value, 0, $maxLength);
+}
+
+function csrf_validate()
+{
+    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        http_response_code(401);
+        exit('Invalid CSRF token');
+    }
+    if (!isset($_SESSION['userID'], $_SESSION['userType'])) {
+        http_response_code(401);
+        exit('Unauthorized');
+    }
 }

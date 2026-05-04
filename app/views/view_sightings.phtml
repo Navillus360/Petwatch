@@ -1,0 +1,74 @@
+<?php
+require_once __DIR__ . ('/../views/components/header.phtml'); ?>
+    <main>
+        <section>
+            <div class="text-center">
+                <button class="btn" id="showMapBtn" onclick="toggleMap(true)">Map View</button>
+                <button class="btn" id="showCardBtn" onclick="toggleMap(false)">Card View</button>
+                <script src="/scripts/viewMap.js"></script>
+            </div>
+        </section>
+        <section>
+            <div class="container">
+                <div class="row justify-content-center align-items-center g-3 flex-wrap">
+                    <div class="col-md-4 col-sm-12">
+                        <input id="liveSearch"
+                               type="text"
+                               class="form-control"
+                               placeholder="Search by latitude, longitude, or description...">
+                    </div>
+                    <div class="col-md-auto text-center" id="sortControls">
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="sort" value="az" id="sortAZ">
+                            <label class="form-check-label" for="sortAZ">A-Z</label>
+                        </div>
+
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="sort" value="za" id="sortZA">
+                            <label class="form-check-label" for="sortZA">Z-A</label>
+                        </div>
+
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="sort" value="lost" id="sortLost">
+                            <label class="form-check-label" for="sortLost">Lost</label>
+                        </div>
+
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="sort" value="found" id="sortFound">
+                            <label class="form-check-label" for="sortFound">Found</label>
+                        </div>
+                    </div>
+                    <div class="col-md-auto">
+                        <button id="resetFiltersBtn" class="btn btn-outline-dark btn-sm"> Reset</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="container">
+                <div class="row justify-content-center align-items-center g-3 flex-wrap">
+                    <div class="col-md-auto">
+                        <p id="resultCount" class="mb-0">Showing 0 results</p>
+                    </div>
+                    <div class="col-md-auto">
+                        <button id="showMoreBtn" class="btn btn-outline-primary btn-sm">
+                            Load More
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section id="mapping" style="display: block">
+            <div id="map" style="height: 600px"></div>
+            <script>
+                window.AUTH = {
+                    userId: <?= $_SESSION['userID'] ?? 'null' ?>,
+                    role: "<?= $_SESSION['userType'] ?? '' ?>"
+                };
+            </script>
+            <script src="/scripts/livesearch.js"></script>
+        </section>
+        <section id="views">
+            <div id="cardContainer" class="container mt-4 row"></div>
+        </section>
+    </main>
+<?php require_once __DIR__ . ('/../views/components/footer.phtml') ?>

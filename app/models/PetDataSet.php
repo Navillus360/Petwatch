@@ -128,9 +128,9 @@ class PetDataSet
         $db = Database::connect();
         $userID = $_SESSION['userID'] ?? null;
         $sqlQuery = "INSERT INTO pets(name, species, breed, color, photo_url, status, user_id, description) 
-            VALUES ('$name', '$species', '$breed', '$color', '$photo_url', 'found', $userID, '$description');)";
+            VALUES ('$name', '$species', '$breed', '$color', '$photo_url', 'found', $userID, (?));";
         $stmt = $db->prepare($sqlQuery);
-        $stmt->execute();
+        $stmt->execute([$description]);
         return true;
     }
 
