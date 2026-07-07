@@ -14,3 +14,10 @@
 
 # Why?
 A academic project focused on understanding the client side of web development using CRUD and MVC techniques 
+
+# License
+This project is licensed under the MIT license. See the [LICENSE](LICENSE.md) file for details.
+
+## Third-Party Credits
+* **[Leaflet](https://leafletjs.com)** ([GitHub Repository](https://github.com/Leaflet/Leaflet)) | Licensed under the [BSD-2-Clause License]
+* **[Bootstrap](https://getbootstrap.com/)** ([GitHub Repository](https://github.com/twbs/bootstrap)) | Licensed under the [MIT License]
